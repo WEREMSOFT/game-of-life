@@ -1,5 +1,6 @@
 import { Rectangle } from "two.js/src/shapes/rectangle";
 import Two from "two.js";
+import { Vector } from "two.js/src/vector";
 import { Candidate } from "./candidate";
 
 class Cell {
@@ -8,59 +9,50 @@ class Cell {
     body: Rectangle;
     colorAngle: number;
     colorChangeSpeed: number;
-    x: number;
-    y: number;
+    position: Vector;
 
-    constructor(two: Two, x: number, y: number, cellEdgeSize: number, cellColor: number, colorChangeSpeed: number) {
+    constructor(two: Two, position: Vector, cellEdgeSize: number, cellColor: number, colorChangeSpeed: number) {
         this.alive = true;
         this.toDie = false;
-        this.x = x;
-        this.y = y;
-        this.body = two.makeRectangle(x * cellEdgeSize + cellEdgeSize / 2, y * cellEdgeSize + cellEdgeSize / 2, cellEdgeSize, cellEdgeSize);
+        this.position = position.clone();
+
+        this.body = two.makeRectangle(position.x * cellEdgeSize + cellEdgeSize / 2, position.y * cellEdgeSize + cellEdgeSize / 2, cellEdgeSize, cellEdgeSize);
         this.colorAngle = cellColor;
         this.colorChangeSpeed = colorChangeSpeed;
         this.changeColor(this.colorAngle);
-        //this.body.stroke = cellColor;
     }
 
     check(cells: Cell[], candidates: Candidate[]) {
         let aliveNear = 0;
-        let startX = -1;
-        while( startX <= 1) {
-            let startY = -1;
-            while(startY <= 1) {
-                if(startX === 0 && startY === 0) {
-                    startY++;
+        let start: Vector = new Vector(-1, -1);
+        while (start.x <= 1) {
+            start.y = -1;
+            while (start.y <= 1) {
+                if (start.x === 0 && start.y === 0) {
+                    start.y++;
                     continue;
                 }
-                let n = cells.find(cell => {
-                    return cell.x === this.x + startX
-                        && cell.y === this.y + startY
-                        && cell.alive 
-                })
-                if(n) {
+                let n = cells.find(cell =>
+                    cell.position.equals(Vector.add(this.position, start))
+                    && cell.alive)
+                if (n) {
                     aliveNear++;
                 } else {
-                    let newCandidate = candidates.find(cell => {
-                        return cell.x === this.x + startX
-                        && cell.y === this.y + startY;
-                        
-                    });
-                    if(newCandidate) {
+                    let newCandidate = candidates.find(cell => cell.position.equals(Vector.add(this.position, start)));
+                    if (newCandidate) {
                         newCandidate.aliveNear++;
                     }
                     candidates.push({
-                        x: this.x + startX, 
-                        y: this.y + startY,
+                        position: Vector.add(this.position, start),
                         aliveNear: 1
                     });
                 }
-                startY++;
+                start.y++;
             }
-            startX++;
+            start.x++;
         }
 
-        if(aliveNear < 2 || aliveNear > 3) {
+        if (aliveNear < 2 || aliveNear > 3) {
             this.toDie = true;
             this.body.fill = '#009900';
         }

@@ -1,6 +1,6 @@
+import { Vector } from "two.js/src/Vector";
 interface Candidate {
-    x: number,
-    y: number,
+    position: Vector
     aliveNear: number
 }
 
